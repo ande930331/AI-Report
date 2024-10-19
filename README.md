@@ -16,21 +16,48 @@ tensorflow圖形檢測_使用Google Colab使用Tensorflow進行自定義對象�
 
 設定Google Colab環境
 ------------------------------
-  Python ```3.6```或```更高版本```。
-  Ubuntu ```18.04/google colab```
-  Tensorflow/Tensorflow-gpu
+確保您有Python 3.6或更高版本
+Ubuntu ```18.04/google colab```
+Tensorflow/Tensorflow-gpu
+使用以下命令安裝 Tensorflow：
+```
+!pip3 install tensorflow
+```
+如果您有可與 Tensorflow 一起使用的 GPU:
+```
+pip install tensorflow-gpu
+```
+*Other dependencies*
+```
+!sudo apt-get install protobuf-compiler python3-pil python3-lxml python3-tk git
+!pip3 install pillow Cython lxml jupyter matplotlib contextlib2
+!pip3 install pycocotools
+```
 複製TensorFlow模型倉庫運行以下程式碼，克隆```TensorFlow```模型庫並進入```research```目錄：
 ```
-git clone https://github.com/tensorflow/models.git
+!git clone https://github.com/tensorflow/models.git
 ```
-建構環境
+Protobuf編譯
 -------------
 Protobuf編譯: Tensorflow物件偵測API使用Protobufs配置模型和訓練參數。在使用該框架之前，必須先編譯Protobuf函式庫。這應該透過從tensorflow / models / research /目錄執行以下命令來完成：
 
+
+克隆 tf models 儲存庫後，現在轉到research資料夾
 ```
-#From TFmodels/research/
+%cd models/research
 ```
-將庫加入到PYTHONPATH在google colab運行時，應將TFmodels / research /和slim目錄附加到PYTHONPATH。
+```
+# From tensorflow/models/research/
+!protoc object_detection/protos/*.proto --python_out=.
+```
+將庫加入到PYTHONPATH在google colab運行時，應將TFmodels / research /和slim目錄附加到PYTHONPATH
+```
+# From tensorflow/models/research/
+!export PYTHONPATH=$PYTHONPATH:`pwd`:`pwd`/slim
+```
+### *note :*
+該命令需要從您啟動的每個新終端運行。如果您希望避免手動運行它，可以將其作為新行添加到 ~/.bashrc 檔案的末尾，將 pwd 替換為系統上的 tensorflow/models/research 的絕對路徑
+
 Gathering data
 -------------------------
 2.1 開啟您的google chrome瀏覽器並安裝一個名為Download All Images的擴充功能。
@@ -48,21 +75,21 @@ Labeling data
 ```
 pip3 install labelImg
 ```
-上面的內容。並對所有圖片執行此操作。它正在做的是，它正在產生一個XML文件，其中包含帶有其標籤的物件座標，標記了約100張圖片。現在克隆儲存庫
+上面的內容。並對所有圖片執行此操作。它正在做的是，它正在產生一個XML文件，其中包含帶有其標籤的物件座標，標記了約100張圖片，現在克隆儲存庫
 ```zjgulai/Tensorflow-Object-Detection-API-With-Custom-Datasetgithub.com```
 ```
 !git clone https://github.com/zjgulai/Tensorflow-Object-Detection-API-With-Custom-Dataset.git
 ```
 ### 克隆之後進入目錄：
-
+```
+%cd models/research/Tensorflow-Object-Detection-API-With-Custom-Dataset
+```
 ![](git.jpg)
 
 Generating TFRecords for training
 -----------------------------------
 現在，將圖像檔案的70％複製到訓練資料夾圖像/訓練中，其餘30％複製到測試資料夾中。
-在標記了影像的情況下，我們需要建立TFRecords用作輸入資料以訓練物件偵測器。為了創建TFRecords，我們將使用```datitran/raccoon_datasetgithub.com```
-
-
+標記影像後，我們需要建立 TFRecord，將其用作目標偵測器訓練的輸入資料。為了建立 TFRecords，我們將使用```datitran/raccoon_datasetgithub.com```中的兩個腳本
 ```xml_to_csv.py```和```generate_tfrecord.py```檔現在在該資料夾中，我們可以透過開啟命令列並鍵入以下內容，將XML檔案轉換為```train_label.csv```和```test_label.csv```：
 ```
 !python xml_to_csv.py
@@ -91,25 +118,25 @@ def class_text_to_int(row_label):
         return None
 ```
 
-鍵入以下內容來產生TFRecords：
+現在，您可以透過鍵入以下內容來產生 TFRecords：
 -----------------------------
 ```
 python3 generate_tfrecord.py --csv_input=data/train_labels.csv  --output_path=train.record --image_dir=images/train
 python3 generate_tfrecord.py --csv_input=data/test_labels.csv  --output_path=test.record --image_dir=images/test
 ```
-這兩個指令產生一個train.record和一個test.record文件，可用來訓練我們的物件偵測器。
+這兩個指令產生一個```train.record```和一個```test.record```文件，可用來訓練我們的物件偵測器。
 
 
 訓練配置
 -----------------------
-在訓練之前，我們要做的最後一件事是create a label map and a training configuration file .
+在訓練之前，我們要做的最後一件事是```create a label map ```and a ```training configuration file``` .
 
 建立標籤圖
 -----------------------
 標籤映射映射： id 到 name。我已經為我的訓練創建了一個標籤圖檔案。它看起來像這樣：
 
 
-編輯：object-detection.pbtxt:
+編輯：```object-detection.pbtxt```:
 ```
 item{
   id:1
@@ -135,7 +162,7 @@ item {
     name: 'etc'
 }
 ```
-每個類別的ID號碼應與generate_tfrecord.py檔案中指定的ID相符。
+每個類別的ID號碼應與 _generate_tfrecord.py_ 檔案中指定的ID相符。
 
 
 建立訓練配置
