@@ -1,6 +1,6 @@
 tensorflow圖形檢測_使用Google Colab使用Tensorflow進行自定義對象檢測
 --------------------------------------------------------------------
-跨領域-人工智慧期中報告 11124111 王志節 11124114 黃安德
+#### 跨領域-人工智慧期中報告 組員:11124111 王志節 11124114 黃安德
 
 本文是關於如何使用 TensorFlow 物件偵測 API 建立自訂物件偵測器的詳細步驟，從安裝環境、資料收集、標註資料、產生 TFRecords 到訓練模型和測試物件偵測器，我們將使用Tensorflow物件來偵測API建立自訂物件偵測器，我將選擇檢測蘋果果實，但是您可以選擇要偵測自己的自訂物件的任何影像。
 
@@ -17,12 +17,16 @@ tensorflow圖形檢測_使用Google Colab使用Tensorflow進行自定義對象�
 設定Google Colab環境
 ------------------------------
 確保您有Python 3.6或更高版本
-Ubuntu ```18.04/google colab```
-Tensorflow/Tensorflow-gpu
-使用以下命令安裝 Tensorflow：
+
+tf-models-official 是穩定的 Model Garden 包
+
+pip3 將自動安裝所有模型和依賴項。
 ```
-!pip3 install tensorflow
+!pip3 install tf-models-official
 ```
+
+
+![](實作bycolab/1.jpg)
 如果您有可與 Tensorflow 一起使用的 GPU:
 ```
 pip install tensorflow-gpu
@@ -31,6 +35,8 @@ pip install tensorflow-gpu
 ```
 !sudo apt-get install protobuf-compiler python3-pil python3-lxml python3-tk git
 !pip3 install pillow Cython lxml jupyter matplotlib contextlib2
+!pip3 install --user -r models/official/requirements.txt
+!pip install tensorflow-io
 !pip3 install pycocotools
 ```
 複製TensorFlow模型倉庫運行以下程式碼，克隆```TensorFlow```模型庫並進入```research```目錄：
@@ -50,13 +56,25 @@ Protobuf編譯: Tensorflow物件偵測API使用Protobufs配置模型和訓練參
 # From tensorflow/models/research/
 !protoc object_detection/protos/*.proto --python_out=.
 ```
-將庫加入到PYTHONPATH在google colab運行時，應將TFmodels / research /和slim目錄附加到PYTHONPATH
+將庫加入到PYTHONPATH在google colab運行時，應將TFmodels / research /和slim目錄附加到PYTHONPATH(使用 os.environ 設定 Python 路徑)
 ```
 # From tensorflow/models/research/
-!export PYTHONPATH=$PYTHONPATH:`pwd`:`pwd`/slim
+import os
+os.environ['PYTHONPATH'] += ":/content/drive/MyDrive/113-ai/models/research:/content/drive/MyDrive/113-ai/models/research/slim"
 ```
 ### *note :*
 該命令需要從您啟動的每個新終端運行。如果您希望避免手動運行它，可以將其作為新行添加到 ~/.bashrc 檔案的末尾，將 pwd 替換為系統上的 tensorflow/models/research 的絕對路徑
+
+物體偵測安裝&測試安裝
+---------------
+```
+!pip install tf-slim
+
+# 測試物件偵測 API 是否正確安裝
+!python object_detection/builders/model_builder_tf2_test.py
+```
+
+![](實作bycolab/3.jpg)
 
 Gathering data
 -------------------------
@@ -66,20 +84,26 @@ Gathering data
 2.2 現在在Google圖片中搜尋所需的圖片選擇，在我的例子中是「 Apple」。現在，按一下「下載所有圖像」擴充功能按鈕，該按鈕將位於瀏覽器的右上角。您將獲得一個包含圖像的zip檔。然後將其提取。
 
 
-![](apple.jpg)
+![](appledownload.jpg)
 
 
 Labeling data
 ----------------
 打開您的終端並透過以下方式安裝LabelImg，LabelImg是圖形影像註解工具，安裝labelImg後，透過鍵入將其打開
 ```
-pip3 install labelImg
+!pip3 install labelImg
 ```
+![](labelImg.jpg)
 上面的內容。並對所有圖片執行此操作。它正在做的是，它正在產生一個XML文件，其中包含帶有其標籤的物件座標，標記了約100張圖片，現在克隆儲存庫
 ```zjgulai/Tensorflow-Object-Detection-API-With-Custom-Datasetgithub.com```
 ```
 !git clone https://github.com/zjgulai/Tensorflow-Object-Detection-API-With-Custom-Dataset.git
 ```
+
+
+![](實作bycolab/4.jpg)
+
+
 ### 克隆之後進入目錄：
 ```
 %cd models/research/Tensorflow-Object-Detection-API-With-Custom-Dataset
@@ -91,9 +115,15 @@ Generating TFRecords for training
 現在，將圖像檔案的70％複製到訓練資料夾圖像/訓練中，其餘30％複製到測試資料夾中。
 標記影像後，我們需要建立 TFRecord，將其用作目標偵測器訓練的輸入資料。為了建立 TFRecords，我們將使用```datitran/raccoon_datasetgithub.com```中的兩個腳本
 ```xml_to_csv.py```和```generate_tfrecord.py```檔現在在該資料夾中，我們可以透過開啟命令列並鍵入以下內容，將XML檔案轉換為```train_label.csv```和```test_label.csv```：
+
+
 ```
-!python xml_to_csv.py
+!python xml_csv.py
 ```
+
+![](b.jpg)
+
+
 它們在資料目錄中會建立兩個檔案。一個叫做```test_labels.csv```，另一個叫做```train_labels.csv```
 在將新建立的檔案轉換為TFRecords之前，我們需要更改```generate_tfrecords.py```檔案中的幾行。
 ```
@@ -125,6 +155,9 @@ python3 generate_tfrecord.py --csv_input=data/train_labels.csv  --output_path=tr
 python3 generate_tfrecord.py --csv_input=data/test_labels.csv  --output_path=test.record --image_dir=images/test
 ```
 這兩個指令產生一個```train.record```和一個```test.record```文件，可用來訓練我們的物件偵測器。
+
+
+![](實作bycolab/5.jpg)
 
 
 訓練配置
@@ -168,10 +201,10 @@ item {
 建立訓練配置
 -----------
 我們將在Google Colab中訓練我們的模型，匯出中我使用「SSD MOBILENET V2」進行訓練，批次大小為 4。您可以變更步驟數、要使用的預訓練模型以及批次和大小。
-
 在此之下，您需要上傳生成的
 
-![](a.jpg)
+
+![](aa.jpg)
 
 
 訓練模型
