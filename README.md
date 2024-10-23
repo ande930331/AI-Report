@@ -200,8 +200,7 @@ item {
 
 建立訓練配置
 -----------
-我們將在Google Colab中訓練我們的模型，匯出中我使用「SSD MOBILENET V2」進行訓練，批次大小為 4。您可以變更步驟數、要使用的預訓練模型以及批次和大小。
-在此之下，您需要上傳生成的
+我們將在Google Colab中訓練我們的模型[在 Colab 中打開](https://colab.research.google.com/drive/1o7JB0pWanEMn6qnRnEXphu0T4YbuKLL2 "在 Colab 中打開")，匯出中我使用「SSD MOBILENET V2」進行訓練，批次大小為 4。您可以變更步驟數、要使用的預訓練模型以及批次和大小。在此之下，您需要上傳生成的```train.record```、```test.record```和```object-detection.pbtxt```檔案。
 
 
 ![](aa.jpg)
@@ -223,6 +222,10 @@ item {
 如果您正確執行了上述所有步驟，則可以透過網路攝影機測試模型。
 
 
+結論
+-----------
+Tensorflow 物件偵測 API 可讓您使用遷移學習技術建立自己的物件偵測器。
+這是獲取代碼的連結。
 
 
 
